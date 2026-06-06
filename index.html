@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>iFitness Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'DM Sans', sans-serif; background: #f2f2f7; color: #1c1c1e; font-size: 15px; -webkit-font-smoothing: antialiased; }
+
+#app { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; background: #f2f2f7; position: relative; overflow: hidden; }
+
+.status-bar { background: #fff; padding: env(safe-area-inset-top, 12px) 20px 0; min-height: env(safe-area-inset-top, 0px); flex-shrink: 0; }
+
+.top-bar { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 12px 20px 10px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.top-bar-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #1c1c1e; }
+.top-bar-sub { font-family: 'Space Mono', monospace; font-size: 9px; color: #8e8e93; letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
+.top-bar-badge { background: #1c1c1e; color: #fff; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 1px; padding: 3px 9px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+.top-bar-badge svg { width: 11px; height: 11px; }
+
+.screens { flex: 1; overflow: hidden; position: relative; }
+.screen { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; display: none; padding-bottom: 16px; }
+.screen.active { display: block; }
+
+/* BOTTOM NAV */
+.bottom-nav { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid #e5e5ea; display: flex; padding: 8px 0 env(safe-area-inset-bottom, 8px); flex-shrink: 0; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 0; cursor: pointer; transition: opacity 0.15s; border: none; background: none; }
+.nav-item:active { opacity: 0.6; }
+.nav-icon { line-height: 1; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); display: flex; align-items: center; justify-content: center; }
+.nav-icon svg { width: 22px; height: 22px; stroke: #8e8e93; transition: stroke 0.15s; }
+.nav-item.active .nav-icon { transform: scale(1.15); }
+.nav-item.active .nav-icon svg { stroke: #1c1c1e; }
+.nav-label { font-size: 10px; font-weight: 500; color: #8e8e93; letter-spacing: 0.3px; }
+.nav-item.active .nav-label { color: #1c1c1e; font-weight: 600; }
+
+/* SECTION HEADERS */
+.section-header { padding: 20px 16px 8px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 2px; color: #8e8e93; text-transform: uppercase; }
+
+/* CARD BASE */
+.card { background: #fff; border-radius: 14px; margin: 0 16px 10px; overflow: hidden; }
+.card-inner { padding: 14px 16px; }
+
+/* HOME SCREEN */
+.hero-card { background: #1c1c1e; color: #fff; margin: 12px 16px 10px; border-radius: 18px; padding: 20px; position: relative; overflow: hidden; }
+.hero-card::after { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.04); pointer-events: none; }
+.hero-eyebrow { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.5); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+.hero-title { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 0.92; letter-spacing: 2px; color: #fff; }
+.hero-title span { -webkit-text-stroke: 1px rgba(255,255,255,0.6); color: transparent; }
+.hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); border-radius: 20px; padding: 4px 12px; font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.8); margin-top: 12px; letter-spacing: 1px; }
+.hero-badge svg { width: 12px; height: 12px; stroke: rgba(255,255,255,0.8); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 16px 10px; }
+.stat-card { background: #fff; border-radius: 14px; padding: 14px 12px; text-align: center; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #1c1c1e; letter-spacing: 1px; line-height: 1; display: block; }
+.stat-lbl { font-size: 10px; color: #8e8e93; font-family: 'Space Mono', monospace; letter-spacing: 0.5px; margin-top: 3px; display: block; }
+
+/* TIMELINE */
+.timeline-item { display: flex; gap: 12px; padding: 10px 16px; position: relative; cursor: default; }
+.timeline-item::after { content: ''; position: absolute; left: 28px; bottom: -1px; width: 1px; height: calc(100% - 10px + 1px); background: #e5e5ea; top: 28px; }
+.timeline-item:last-child::after { display: none; }
+.timeline-dot { width: 20px; height: 20px; border-radius: 50%; background: #e5e5ea; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+.timeline-dot svg { width: 10px; height: 10px; }
+.timeline-dot.gym { background: #1c1c1e; }
+.timeline-dot.gym svg { stroke: #fff; }
+.timeline-dot.meal { background: #e5e5ea; }
+.timeline-dot.meal svg { stroke: #3a3a3c; }
+.timeline-dot.sleep { background: #8e8e93; }
+.timeline-dot.sleep svg { stroke: #fff; }
+.timeline-content { flex: 1; }
+.timeline-time { font-family: 'Space Mono', monospace; font-size: 10px; color: #8e8e93; letter-spacing: 0.5px; }
+.timeline-label { font-size: 14px; font-weight: 600; color: #1c1c1e; margin-top: 1px; }
+.timeline-detail { font-size: 12px; color: #8e8e93; margin-top: 1px; }
+.timeline-protein { font-family: 'Space Mono', monospace; font-size: 10px; color: #444; margin-top: 3px; }
+
+/* WORKOUT SCREEN */
+.day-tabs { display: flex; gap: 6px; padding: 12px 16px 0; overflow-x: auto; scrollbar-width: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-tab { flex-shrink: 0; background: #fff; border: none; border-radius: 10px; padding: 8px 14px; cursor: pointer; transition: background 0.15s; text-align: center; }
+.day-tab.active { background: #1c1c1e; }
+.day-tab-name { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1px; color: #8e8e93; display: block; }
+.day-tab.active .day-tab-name { color: #fff; }
+.day-tab-focus { font-family: 'Space Mono', monospace; font-size: 8px; color: #c7c7cc; display: block; margin-top: 1px; letter-spacing: 0.5px; }
+.day-tab.active .day-tab-focus { color: rgba(255,255,255,0.5); }
+
+.workout-panel { display: none; }
+.workout-panel.active { display: block; }
+
+.workout-day-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 8px; }
+.workout-day-title { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 2px; color: #1c1c1e; }
+.workout-focus-badge { background: #1c1c1e; color: #fff; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1px; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+.workout-meta { padding: 0 16px 10px; font-size: 12px; color: #8e8e93; font-family: 'Space Mono', monospace; }
+
+/* WORKOUT CARD WITH IMAGE */
+.ex-card {
+  background: #fff;
+  border-radius: 14px;
+  margin: 0 16px 8px;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.12s;
+  border: none;
+  width: calc(100% - 32px);
+  text-align: left;
+  overflow: hidden;
+  display: block;
+}
+.ex-card:active { background: #f2f2f7; transform: scale(0.99); }
+
+.ex-card-img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  display: block;
+  background: #e5e5ea;
+}
+.ex-card-img-placeholder {
+  width: 100%;
+  height: 110px;
+  background: linear-gradient(135deg, #2a2a2e 0%, #3a3a3e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ex-card-img-placeholder svg { width: 36px; height: 36px; stroke: rgba(255,255,255,0.3); }
+
+.ex-card-body { display: flex; align-items: center; padding: 12px 14px; gap: 12px; }
+.ex-num-badge { width: 28px; height: 28px; background: #f2f2f7; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 10px; color: #8e8e93; flex-shrink: 0; }
+.ex-info { flex: 1; }
+.ex-title { font-size: 14px; font-weight: 600; color: #1c1c1e; }
+.ex-muscles { font-size: 11px; color: #8e8e93; margin-top: 2px; }
+.ex-sets-pill { background: #f2f2f7; border-radius: 8px; padding: 5px 10px; font-family: 'Space Mono', monospace; font-size: 11px; color: #1c1c1e; font-weight: 700; flex-shrink: 0; }
+.ex-chevron { color: #c7c7cc; flex-shrink: 0; display: flex; align-items: center; }
+.ex-chevron svg { width: 16px; height: 16px; stroke: #c7c7cc; }
+
+/* MEAL SCREEN */
+.macro-bar-card { background: #1c1c1e; border-radius: 18px; margin: 12px 16px 10px; padding: 18px; color: #fff; }
+.macro-title { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 3px; color: rgba(255,255,255,0.5); margin-bottom: 12px; }
+.macro-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.macro-item { text-align: center; }
+.macro-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; letter-spacing: 1px; display: block; line-height: 1; }
+.macro-lbl { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 1px; display: block; margin-top: 3px; }
+.progress-bar-wrap { background: rgba(255,255,255,0.1); border-radius: 4px; height: 4px; margin-top: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: #fff; border-radius: 4px; }
+
+.meal-card-item { background: #fff; border-radius: 14px; margin: 0 16px 8px; overflow: hidden; }
+.meal-card-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid #f2f2f7; }
+.meal-name { font-weight: 600; font-size: 15px; color: #1c1c1e; }
+.meal-time-tag { font-family: 'Space Mono', monospace; font-size: 10px; color: #8e8e93; }
+.meal-protein-tag { background: #f2f2f7; border-radius: 8px; padding: 3px 9px; font-family: 'Space Mono', monospace; font-size: 10px; color: #1c1c1e; font-weight: 700; }
+.meal-items-list { padding: 4px 0; }
+.meal-food-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid #f2f2f7; }
+.meal-food-row:last-child { border-bottom: none; }
+.meal-food-name { font-size: 14px; color: #1c1c1e; }
+.meal-food-qty { font-family: 'Space Mono', monospace; font-size: 11px; color: #8e8e93; }
+
+/* PROGRESS SCREEN */
+.progress-hero { background: #1c1c1e; border-radius: 18px; margin: 12px 16px 10px; padding: 18px 20px; color: #fff; }
+.progress-week-label { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 2px; margin-bottom: 4px; }
+.progress-week-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; color: #fff; }
+.progress-week-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+.week-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+.week-nav-btn { background: rgba(255,255,255,0.12); border: none; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; }
+.week-nav-btn:active { opacity: 0.6; }
+.week-nav-btn svg { width: 18px; height: 18px; stroke: #fff; }
+.week-dots { display: flex; gap: 4px; }
+.week-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+.week-dot.active { background: #fff; width: 18px; border-radius: 3px; }
+
+.tracker-card { background: #fff; border-radius: 14px; margin: 0 16px 10px; overflow: hidden; }
+.tracker-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f2f2f7; gap: 12px; }
+.tracker-row:last-child { border-bottom: none; }
+.tracker-icon { width: 28px; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.tracker-icon svg { width: 20px; height: 20px; stroke: #8e8e93; }
+.tracker-info { flex: 1; }
+.tracker-label { font-size: 13px; font-weight: 600; color: #1c1c1e; }
+.tracker-sub { font-size: 11px; color: #8e8e93; }
+.tracker-value-wrap { text-align: right; }
+.tracker-value { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #1c1c1e; letter-spacing: 1px; display: block; line-height: 1; }
+.tracker-unit { font-family: 'Space Mono', monospace; font-size: 9px; color: #8e8e93; display: block; margin-top: 2px; }
+
+.mindset-card-item { background: #fff; border-radius: 14px; margin: 0 16px 8px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
+.mindset-icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #f2f2f7; border-radius: 8px; }
+.mindset-icon svg { width: 18px; height: 18px; stroke: #1c1c1e; }
+.mindset-title { font-weight: 600; font-size: 14px; color: #1c1c1e; margin-bottom: 3px; }
+.mindset-text { font-size: 12px; color: #8e8e93; line-height: 1.5; }
+
+/* GROCERY SCREEN */
+.grocery-category { background: #fff; border-radius: 14px; margin: 0 16px 10px; overflow: hidden; }
+.grocery-cat-header { padding: 12px 16px; border-bottom: 1px solid #f2f2f7; display: flex; align-items: center; gap: 10px; }
+.grocery-cat-icon { display: flex; align-items: center; }
+.grocery-cat-icon svg { width: 18px; height: 18px; stroke: #1c1c1e; }
+.grocery-cat-name { font-weight: 600; font-size: 15px; color: #1c1c1e; }
+.grocery-item-row { display: flex; align-items: center; padding: 11px 16px; border-bottom: 1px solid #f2f2f7; gap: 12px; cursor: pointer; transition: background 0.1s; }
+.grocery-item-row:last-child { border-bottom: none; }
+.grocery-item-row:active { background: #f2f2f7; }
+.grocery-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #c7c7cc; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.grocery-check svg { width: 11px; height: 11px; stroke: transparent; }
+.grocery-item-row.checked .grocery-check { background: #1c1c1e; border-color: #1c1c1e; }
+.grocery-item-row.checked .grocery-check svg { stroke: #fff; }
+.grocery-item-name { font-size: 14px; color: #1c1c1e; flex: 1; }
+.grocery-item-row.checked .grocery-item-name { color: #8e8e93; text-decoration: line-through; }
+
+/* OFFICE TOGGLE */
+.office-toggle-bar { display: flex; align-items: center; justify-content: space-between; background: #fff; margin: 10px 16px 0; border-radius: 14px; padding: 12px 16px; }
+.office-toggle-label { font-size: 13px; font-weight: 600; color: #1c1c1e; }
+.office-toggle-sub { font-size: 11px; color: #8e8e93; margin-top: 1px; }
+.office-toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.office-toggle-status { font-family: 'Space Mono', monospace; font-size: 10px; color: #8e8e93; letter-spacing: 0.5px; }
+.toggle-switch { position: relative; width: 44px; height: 26px; cursor: pointer; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: #e5e5ea; border-radius: 13px; transition: background 0.2s; }
+.toggle-slider::before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.toggle-switch input:checked + .toggle-slider { background: #1c1c1e; }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* SATURDAY MAKEUP BADGE */
+.sat-makeup-banner { background: #fff3cd; border-radius: 12px; margin: 8px 16px 0; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.sat-makeup-banner svg { width: 16px; height: 16px; stroke: #856404; flex-shrink: 0; }
+.sat-makeup-text { font-size: 12px; color: #856404; font-weight: 600; }
+.sat-makeup-banner.hidden { display: none; }
+
+/* RECOVER DAY CARD */
+.recover-card { background: linear-gradient(135deg, #f2f2f7 0%, #e5e5ea 100%); border-radius: 18px; margin: 14px 16px 10px; padding: 24px 20px; text-align: center; }
+.recover-icon { width: 56px; height: 56px; background: #1c1c1e; border-radius: 16px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+.recover-icon svg { width: 28px; height: 28px; stroke: #fff; }
+.recover-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: #1c1c1e; }
+.recover-sub { font-size: 13px; color: #8e8e93; margin-top: 6px; line-height: 1.5; }
+.recover-tips { text-align: left; background: #fff; border-radius: 14px; margin: 14px 0 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.recover-tip { display: flex; align-items: center; gap: 12px; }
+.recover-tip svg { width: 18px; height: 18px; stroke: #1c1c1e; flex-shrink: 0; }
+.recover-tip-text { font-size: 13px; color: #3a3a3c; line-height: 1.4; }
+
+
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal-sheet { background: #fff; border-radius: 20px 20px 0 0; width: 100%; max-width: 430px; max-height: 88dvh; overflow-y: auto; animation: slideUp 0.28s cubic-bezier(0.32,0.72,0,1); padding-bottom: env(safe-area-inset-bottom, 16px); }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 36px; height: 4px; background: #e5e5ea; border-radius: 2px; margin: 10px auto 0; }
+.modal-header { padding: 14px 20px 16px; border-bottom: 1px solid #f2f2f7; }
+.modal-ex-name { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 2px; color: #1c1c1e; line-height: 1; }
+.modal-day-tag { font-family: 'Space Mono', monospace; font-size: 10px; color: #8e8e93; margin-top: 4px; letter-spacing: 1px; }
+.modal-sets-pill { display: inline-block; background: #1c1c1e; color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 16px; padding: 3px 12px; border-radius: 8px; letter-spacing: 1px; margin-top: 8px; }
+.modal-body { padding: 16px 20px; }
+.modal-info-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.modal-info-chip { flex: 1; background: #f2f2f7; border-radius: 12px; padding: 12px; text-align: center; }
+.mic-lbl { font-family: 'Space Mono', monospace; font-size: 9px; color: #8e8e93; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.mic-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #1c1c1e; letter-spacing: 1px; display: block; line-height: 1; }
+.modal-section-lbl { font-family: 'Space Mono', monospace; font-size: 10px; color: #8e8e93; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+.muscle-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.muscle-chip { background: #f2f2f7; border-radius: 8px; padding: 4px 10px; font-size: 12px; color: #444; }
+.muscle-chip.primary { background: #1c1c1e; color: #fff; }
+.tips-list { background: #f2f2f7; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+.tip-item { font-size: 13px; color: #3a3a3c; line-height: 1.5; padding-left: 14px; position: relative; }
+.tip-item::before { content: '•'; position: absolute; left: 2px; color: #8e8e93; }
+.set-tracker { display: flex; flex-direction: column; gap: 8px; }
+.set-row { display: flex; align-items: center; gap: 12px; background: #f2f2f7; border-radius: 12px; padding: 12px 14px; cursor: pointer; user-select: none; transition: background 0.12s; border: 2px solid transparent; }
+.set-row.done { background: #1c1c1e; border-color: #1c1c1e; }
+.set-row:active { opacity: 0.7; }
+.set-circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #c7c7cc; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+.set-circle svg { width: 12px; height: 12px; stroke: transparent; }
+.set-row.done .set-circle { background: #fff; border-color: #fff; }
+.set-row.done .set-circle svg { stroke: #1c1c1e; }
+.set-set-label { font-family: 'Space Mono', monospace; font-size: 11px; color: #8e8e93; flex-shrink: 0; }
+.set-row.done .set-set-label { color: rgba(255,255,255,0.5); }
+.set-rep-label { font-size: 14px; font-weight: 600; color: #1c1c1e; flex: 1; }
+.set-row.done .set-rep-label { color: #fff; text-decoration: line-through; text-decoration-color: rgba(255,255,255,0.3); }
+.modal-close-btn { width: 100%; background: #f2f2f7; border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 600; color: #1c1c1e; cursor: pointer; margin-top: 16px; font-family: 'DM Sans', sans-serif; }
+.modal-close-btn:active { opacity: 0.7; }
+
+/* SPLASH SCREEN */
+#splashScreen {
+  position: fixed; inset: 0; z-index: 2000;
+  background: #1c1c1e;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: 'DM Sans', sans-serif;
+}
+.splash-logo-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  animation: splashPop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+}
+@keyframes splashPop {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.splash-icon {
+  width: 88px; height: 88px;
+  background: #fff; border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.splash-icon svg { width: 48px; height: 48px; stroke: #1c1c1e; }
+.splash-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px; letter-spacing: 4px; color: #fff; line-height: 1;
+}
+.splash-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: rgba(255,255,255,0.4);
+  letter-spacing: 3px; text-transform: uppercase;
+  margin-top: 8px;
+}
+.splash-bar-wrap {
+  position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+  width: 120px;
+  animation: splashFadeIn 0.4s ease 0.9s both;
+}
+@keyframes splashFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.splash-bar-track {
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px; height: 3px; overflow: hidden;
+}
+.splash-bar-fill {
+  height: 100%; width: 0%; background: #fff;
+  border-radius: 4px;
+  animation: splashLoad 1.4s cubic-bezier(0.4,0,0.2,1) 1s forwards;
+}
+@keyframes splashLoad { from { width: 0%; } to { width: 100%; } }
+#splashScreen.hide {
+  animation: splashFadeOut 0.45s cubic-bezier(0.4,0,1,1) forwards;
+}
+@keyframes splashFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.04); }
+}
+
+/* PIN LOGIN */
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #c7c7cc; background: transparent; transition: all 0.15s; }
+.pin-dot.filled { background: #1c1c1e; border-color: #1c1c1e; }
+.pin-dot.error { background: #ff3b30; border-color: #ff3b30; }
+.pin-btn { background: #fff; border: none; border-radius: 50%; width: 72px; height: 72px; font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1px; color: #1c1c1e; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: background 0.1s, transform 0.1s; margin: 0 auto; }
+.pin-btn:active { background: #e5e5ea; transform: scale(0.93); }
+.pin-del { font-size: 16px; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splashScreen">
+  <div class="splash-logo-wrap">
+    <div class="splash-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/>
+      </svg>
+    </div>
+    <div class="splash-title">iFitness Hub</div>
+    <div class="splash-sub">Body Recomp · 12 Weeks</div>
+  </div>
+  <div class="splash-bar-wrap">
+    <div class="splash-bar-track">
+      <div class="splash-bar-fill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="
+  position:fixed;inset:0;z-index:1000;background:#f2f2f7;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+">
+  <!-- User select view -->
+  <div id="loginUserSelect" style="width:100%;max-width:430px;padding:32px 24px;text-align:center;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:#1c1c1e;margin-bottom:4px;">iFITNESS HUB</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#8e8e93;letter-spacing:2px;text-transform:uppercase;margin-bottom:40px;">RECOMP · SELECT PROFILE</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <button onclick="selectUser('mohan')" style="
+        background:#fff;border:none;border-radius:18px;padding:18px 20px;
+        display:flex;align-items:center;gap:16px;cursor:pointer;
+        box-shadow:0 2px 12px rgba(0,0,0,0.08);transition:transform 0.15s;
+        text-align:left;width:100%;
+      " onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform=''">
+        <img src="images/mohan.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:#1c1c1e;display:none;align-items:center;justify-content:center;flex-shrink:0;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;">M</div>
+        <div style="flex:1;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#1c1c1e;line-height:1;">MOHAN</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#8e8e93;margin-top:3px;">75.5 kg · Body Recomp</div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button onclick="selectUser('martin')" style="
+        background:#fff;border:none;border-radius:18px;padding:18px 20px;
+        display:flex;align-items:center;gap:16px;cursor:pointer;
+        box-shadow:0 2px 12px rgba(0,0,0,0.08);transition:transform 0.15s;
+        text-align:left;width:100%;
+      " onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform=''">
+        <img src="images/martin.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:#3a3a3c;display:none;align-items:center;justify-content:center;flex-shrink:0;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;">M</div>
+        <div style="flex:1;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#1c1c1e;line-height:1;">MARTIN</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#8e8e93;margin-top:3px;">Night Shift Athlete</div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- PIN entry view -->
+  <div id="loginPinView" style="width:100%;max-width:430px;padding:32px 24px;text-align:center;display:none;">
+    <button onclick="backToUserSelect()" style="background:none;border:none;color:#8e8e93;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;margin-bottom:24px;display:flex;align-items:center;gap:6px;margin-left:0;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> BACK
+    </button>
+    <div id="pinAvatar" style="width:72px;height:72px;border-radius:50%;margin:0 auto 12px;overflow:hidden;background:#1c1c1e;display:flex;align-items:center;justify-content:center;">
+      <span id="pinAvatarInitial" style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;letter-spacing:1px;"></span>
+    </div>
+    <div id="pinName" style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:#1c1c1e;margin-bottom:4px;"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#8e8e93;letter-spacing:1px;margin-bottom:28px;">ENTER PIN</div>
+
+    <!-- PIN dots -->
+    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:32px;" id="pinDots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+      <div class="pin-dot" id="d4"></div>
+      <div class="pin-dot" id="d5"></div>
+    </div>
+
+    <!-- PIN error -->
+    <div id="pinError" style="font-family:'Space Mono',monospace;font-size:11px;color:#ff3b30;letter-spacing:1px;margin-bottom:16px;min-height:18px;"></div>
+
+    <!-- Numpad -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto;">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <div></div>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn pin-del" onclick="pinDelete()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="status-bar"></div>
+
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="topBarAvatar" style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:#1c1c1e;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="logout()">
+        <img id="topBarAvatarImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;">
+        <span id="topBarAvatarInitial" style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff;letter-spacing:1px;"></span>
+      </div>
+      <div>
+        <div class="top-bar-title">iFitness Hub</div>
+        <div class="top-bar-sub" id="topBarSub">11 AM – 8 PM · Gym 6 AM</div>
+      </div>
+    </div>
+      <div class="top-bar-badge" id="headerWeekBadge">
+        <svg style="width:11px;height:11px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> WEEK 2
+      </div>
+  </div>
+
+  <div class="screens">
+
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div class="hero-card">
+        <div class="hero-eyebrow">3-Month Body Recomposition</div>
+        <div class="hero-title">BUILD MUSCLE<br><span>BURN FAT</span></div>
+        <div class="hero-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> iFITNESS HUB · DAY SHIFT
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-val">75.5kg</span><span class="stat-lbl">Weight</span></div>
+        <div class="stat-card"><span class="stat-val">173cm</span><span class="stat-lbl">Height</span></div>
+        <div class="stat-card"><span class="stat-val">~163g</span><span class="stat-lbl">Protein/Day</span></div>
+        <div class="stat-card"><span class="stat-val">2200</span><span class="stat-lbl">Cal Target</span></div>
+        <div class="stat-card"><span class="stat-val">5×/wk</span><span class="stat-lbl">Training</span></div>
+        <div class="stat-card"><span class="stat-val">12 Wks</span><span class="stat-lbl">Duration</span></div>
+      </div>
+
+      <div class="section-header">Today's Schedule</div>
+      <div class="card" style="padding:8px 0;">
+        <div class="timeline-item">
+          <div class="timeline-dot gym"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">5:30 AM — WAKE UP</div>
+            <div class="timeline-label">Rise + 500ml Water</div>
+            <div class="timeline-detail">Light stretch · Get ready for gym</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot gym"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">6:00 – 7:00 AM</div>
+            <div class="timeline-label">GYM SESSION</div>
+            <div class="timeline-detail">60 min · See Workout tab</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot meal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c6.23-.05 7.87-5.57 7.5-10-.36-4.34-3.95-9.96-7.5-10-3.55.04-7.14 5.66-7.5 10-.37 4.43 1.27 9.95 7.5 10z"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">7:15 AM — POST-WORKOUT</div>
+            <div class="timeline-label">Recovery Meal</div>
+            <div class="timeline-detail">Whey + Eggs 3 + Rice 150g + Curd 100g</div>
+            <div class="timeline-protein">~50g protein</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot meal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">9:30 AM — MEAL 2</div>
+            <div class="timeline-label">Breakfast</div>
+            <div class="timeline-detail">Whey 1 scoop · Eggs 4 · Oats 60g · Curd 200g</div>
+            <div class="timeline-protein">~55g protein</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"><svg style="stroke:#1c1c1e" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">11:00 AM — SHIFT STARTS</div>
+            <div class="timeline-label">Day Shift Begins</div>
+            <div class="timeline-detail">1L bottle · Stay hydrated through shift</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot meal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">2:00 PM — MID-SHIFT</div>
+            <div class="timeline-label">Main Meal</div>
+            <div class="timeline-detail">Chicken 150g · Rice 200g · Veg</div>
+            <div class="timeline-protein">~45g protein</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot meal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">5:30 PM — LATE SHIFT</div>
+            <div class="timeline-label">Snack</div>
+            <div class="timeline-detail">Curd 200g + Banana 1</div>
+            <div class="timeline-protein">~8g protein</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot sleep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">8:00 PM — SHIFT ENDS</div>
+            <div class="timeline-label">Wind Down</div>
+            <div class="timeline-detail">Light meal if needed · Sleep by 10 PM</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot meal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06z"/><path d="M10 2c1 .5 2 2 2 5"/></svg></div>
+          <div class="timeline-content">
+            <div class="timeline-time">8:30 PM — POST-SHIFT</div>
+            <div class="timeline-label">Final Snack (Optional)</div>
+            <div class="timeline-detail">Nuts / fruit / protein bar</div>
+            <div class="timeline-protein">~5–8g protein</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKOUT -->
+    <div class="screen" id="screen-workout">
+      <div class="day-tabs" id="dayTabs">
+        <button class="day-tab active" onclick="switchDay(0)"><span class="day-tab-name">MON</span><span class="day-tab-focus">Chest</span></button>
+        <button class="day-tab" onclick="switchDay(1)"><span class="day-tab-name">TUE</span><span class="day-tab-focus">Back</span></button>
+        <button class="day-tab" onclick="switchDay(2)"><span class="day-tab-name">WED</span><span class="day-tab-focus">Legs</span></button>
+        <button class="day-tab" onclick="switchDay(3)"><span class="day-tab-name">THU</span><span class="day-tab-focus">Shoulders</span></button>
+        <button class="day-tab" onclick="switchDay(4)"><span class="day-tab-name">FRI</span><span class="day-tab-focus">Upper+Abs</span></button>
+        <button class="day-tab" onclick="switchDay(5)" id="satTab"><span class="day-tab-name">SAT</span><span class="day-tab-focus" id="satFocus">Rest</span></button>
+        <button class="day-tab" onclick="switchDay(6)"><span class="day-tab-name">SUN</span><span class="day-tab-focus">Rest</span></button>
+      </div>
+
+      <!-- OFFICE TOGGLE (shown inside workout screen) -->
+      <div class="office-toggle-bar">
+        <div>
+          <div class="office-toggle-label">Today's Mode</div>
+          <div class="office-toggle-sub" id="officeToggleSub">Working from home — gym after shift</div>
+        </div>
+        <div class="office-toggle-wrap">
+          <span class="office-toggle-status" id="officeStatusLabel">HOME</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="officeToggle" onchange="handleOfficeToggle()">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="office-toggle-status" style="color:#1c1c1e;font-weight:700;">OFFICE</span>
+        </div>
+      </div>
+
+      <!-- Saturday makeup banner (shows when office toggle is ON) -->
+      <div class="sat-makeup-banner hidden" id="satMakeupBanner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span class="sat-makeup-text">Office day detected — Saturday is your makeup gym day!</span>
+      </div>
+
+      <!-- MONDAY -->
+      <div class="workout-panel active" id="day-0">
+        <div class="workout-day-header">
+          <div class="workout-day-title">Monday</div>
+          <div class="workout-focus-badge">Chest + Triceps</div>
+        </div>
+        <div class="workout-meta">6:00 – 7:00 AM · 60 min · Tap exercise for tips</div>
+
+        <button class="ex-card" onclick="openEx('Barbell Bench Press','Monday — Chest + Triceps','4×8–10',['Chest','Anterior Deltoid','Triceps'],['Front Deltoid','Serratus'],['Keep shoulder blades pinched and retracted throughout','Lower bar to mid-chest, not the neck','Drive through your heels for full-body tension','Pause 1 sec at the bottom to eliminate momentum'])">
+          <img class="ex-card-img" src="images/barbell_bench_press.png" alt="Barbell Bench Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Barbell Bench Press</div><div class="ex-muscles">Chest · Triceps · Anterior Deltoid</div></div><div class="ex-sets-pill">4×8–10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Incline Dumbbell Press','Monday — Chest + Triceps','4×10–12',['Upper Chest','Anterior Deltoid','Triceps'],['Biceps','Serratus'],['Set bench 30–45°, not higher','Neutral grip reduces shoulder strain','Touch dumbbells at top without fully locking out','3 sec eccentric — slow the descent'])">
+          <img class="ex-card-img" src="images/incline_dumbbell_press.png" alt="Incline Dumbbell Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1534368786749-b63e05c92717?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Incline Dumbbell Press</div><div class="ex-muscles">Upper Chest · Triceps</div></div><div class="ex-sets-pill">4×10–12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Pec Deck Fly','Monday — Chest + Triceps','3×12–15',['Pectoralis Major'],['Anterior Deltoid'],['Keep elbows slightly bent throughout','Squeeze hard at peak contraction','Do NOT let weight stack touch between reps','Full stretch at the start position'])">
+          <img class="ex-card-img" src="images/pec_deck_fly.png" alt="Pec Deck Fly" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Pec Deck Fly</div><div class="ex-muscles">Pectoralis Major</div></div><div class="ex-sets-pill">3×12–15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Cable Chest Fly','Monday — Chest + Triceps','3×12–15',['Pectoralis Major','Anterior Deltoid'],['Biceps'],['Cables at shoulder height for mid-chest','Cross hands slightly at center for peak contraction','Keep a slight forward lean in your torso','Slow the eccentric for constant tension'])">
+          <img class="ex-card-img" src="images/cable_chest_fly.png" alt="Cable Fly" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1598971639058-fab3c3109a53?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Cable Chest Fly</div><div class="ex-muscles">Pec Major · Anterior Deltoid</div></div><div class="ex-sets-pill">3×12–15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Tricep Pushdown','Monday — Chest + Triceps','4×12',['Triceps Brachii (all 3 heads)'],['Anconeus'],['Keep elbows pinned to your sides','Fully extend the arm at the bottom','Rope or straight bar both work','Lean forward slightly for better leverage'])">
+          <img class="ex-card-img" src="images/tricep_pushdown.png" alt="Tricep Pushdown" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Tricep Pushdown</div><div class="ex-muscles">Triceps Brachii (all 3 heads)</div></div><div class="ex-sets-pill">4×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Overhead Tricep Extension','Monday — Chest + Triceps','3×12',['Triceps Long Head'],['Anconeus'],['Full overhead stretch hits long head maximally','Keep elbows close — no flaring','EZ-bar, dumbbell, or cable — all work','Most neglected head: prioritise it'])">
+          <img class="ex-card-img" src="images/overhead_tricep_extension.png" alt="Overhead Tricep Extension" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">6</div><div class="ex-info"><div class="ex-title">Overhead Tricep Ext.</div><div class="ex-muscles">Triceps Long Head</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Bench Dips','Monday — Chest + Triceps','3×Failure',['Triceps','Anterior Deltoid','Chest'],['Pectoralis Minor'],['Keep hips close to bench for tricep focus','Lower until 90° — no lower to protect shoulders','Add weight on lap once bodyweight is easy','Slow descent maintains tension'])">
+          <img class="ex-card-img" src="images/bench_dips.png" alt="Bench Dips" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1616803689943-5601631c7fec?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">7</div><div class="ex-info"><div class="ex-title">Bench Dips</div><div class="ex-muscles">Triceps · Anterior Deltoid</div></div><div class="ex-sets-pill">3×Fail</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+      </div>
+
+      <!-- TUESDAY -->
+      <div class="workout-panel" id="day-1">
+        <div class="workout-day-header"><div class="workout-day-title">Tuesday</div><div class="workout-focus-badge">Back + Biceps</div></div>
+        <div class="workout-meta">6:00 – 7:00 AM · 60 min · Tap exercise for tips</div>
+
+        <button class="ex-card" onclick="openEx('Lat Pulldown','Tuesday — Back + Biceps','4×10–12',['Latissimus Dorsi','Biceps','Teres Major'],['Rear Deltoid','Rhomboids'],['Pull to upper chest, not behind neck','Arch lower back slightly, lean back 10–15°','Initiate with elbows, not hands','Fully extend at top for lat stretch'])">
+          <img class="ex-card-img" src="images/lat_pulldown.png" alt="Lat Pulldown" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Lat Pulldown</div><div class="ex-muscles">Lats · Biceps · Teres Major</div></div><div class="ex-sets-pill">4×10–12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Seated Cable Row','Tuesday — Back + Biceps','4×10–12',['Middle Trapezius','Rhomboids','Latissimus Dorsi'],['Biceps','Rear Deltoid'],['Pull handle to lower chest / upper stomach','Sit tall — avoid rounding lower back','Drive elbows back, squeeze shoulder blades','Let weight pull you forward for full stretch'])">
+          <img class="ex-card-img" src="images/seated_cable_row.png" alt="Seated Cable Row" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1567598508481-65985588e295?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Seated Cable Row</div><div class="ex-muscles">Mid Traps · Rhomboids · Lats</div></div><div class="ex-sets-pill">4×10–12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Barbell Row','Tuesday — Back + Biceps','4×8–10',['Latissimus Dorsi','Rhomboids','Erector Spinae'],['Biceps','Rear Deltoid','Hamstrings'],['Hinge at hips, keep back flat — no rounding','Pull bar to belly button, not chest','Neutral spine throughout','Drive elbows back and up'])">
+          <img class="ex-card-img" src="images/barbell_row.png" alt="Barbell Row" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Barbell Row</div><div class="ex-muscles">Lats · Rhomboids · Erector Spinae</div></div><div class="ex-sets-pill">4×8–10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('One Arm Dumbbell Row','Tuesday — Back + Biceps','3×10',['Latissimus Dorsi','Teres Major'],['Biceps','Rear Deltoid'],['Support on bench — brace core tight','Pull to your hip, not shoulder','Avoid rotating your torso','Let the dumbbell arc slightly'])">
+          <img class="ex-card-img" src="images/one_arm_dumbbell_row.png" alt="Dumbbell Row" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">One Arm Dumbbell Row</div><div class="ex-muscles">Lats · Teres Major</div></div><div class="ex-sets-pill">3×10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Barbell Curl','Tuesday — Back + Biceps','4×10',['Biceps Brachii','Brachialis'],['Forearm Flexors'],['Elbows pinned to sides — no swinging','Full range: extend fully at bottom','Squeeze hard at top for 1 sec','EZ-bar reduces wrist strain'])">
+          <img class="ex-card-img" src="images/barbell_curl.png" alt="Barbell Curl" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80&auto=format&fit=crop&crop=left'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Barbell Curl</div><div class="ex-muscles">Biceps Brachii · Brachialis</div></div><div class="ex-sets-pill">4×10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Hammer Curl','Tuesday — Back + Biceps','3×12',['Brachialis','Brachioradialis','Biceps'],['Forearm Extensors'],['Neutral grip (thumbs up) throughout','Targets brachialis — key for arm thickness','Keep wrists straight','Alternate or do both simultaneously'])">
+          <img class="ex-card-img" src="images/hammer_curl.png" alt="Hammer Curl" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">6</div><div class="ex-info"><div class="ex-title">Hammer Curl</div><div class="ex-muscles">Brachialis · Brachioradialis</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Preacher Curl','Tuesday — Back + Biceps','3×12',['Biceps Brachii (short head)'],['Brachialis'],['Pad eliminates swinging — strict form only','Lower fully to stretch the short head','Do NOT lock out to protect elbows','Builds the bicep peak'])">
+          <img class="ex-card-img" src="images/preacher_curl.png" alt="Preacher Curl" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">7</div><div class="ex-info"><div class="ex-title">Preacher Curl</div><div class="ex-muscles">Biceps Short Head</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+      </div>
+
+      <!-- WEDNESDAY -->
+      <div class="workout-panel" id="day-2">
+        <div class="workout-day-header"><div class="workout-day-title">Wednesday</div><div class="workout-focus-badge">Legs</div></div>
+        <div class="workout-meta">6:00 – 7:00 AM · 60 min · Tap exercise for tips</div>
+
+        <button class="ex-card" onclick="openEx('Barbell Squat','Wednesday — Legs','4×8–10',['Quadriceps','Glutes','Hamstrings'],['Erector Spinae','Adductors','Calves'],['Bar on upper traps — not your neck','Chest up, knees track over toes','Break at hips first, then knees','At least parallel; ATG if mobility allows'])">
+          <img class="ex-card-img" src="images/barbell_squat.png" alt="Barbell Squat" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1567598508481-65985588e295?w=600&q=80&auto=format&fit=crop&crop=top'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Barbell Squat</div><div class="ex-muscles">Quads · Glutes · Hamstrings</div></div><div class="ex-sets-pill">4×8–10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Leg Press','Wednesday — Legs','4×12',['Quadriceps','Glutes','Hamstrings'],['Calves','Adductors'],['Feet shoulder-width at mid-plate','Lower to 90° — no deeper','Do NOT lock knees at top','High foot = glutes; low = quads'])">
+          <img class="ex-card-img" src="images/leg_press.png" alt="Leg Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Leg Press</div><div class="ex-muscles">Quads · Glutes · Hamstrings</div></div><div class="ex-sets-pill">4×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Walking Lunges','Wednesday — Legs','3×20 steps',['Quadriceps','Glutes','Hamstrings'],['Calves','Core'],['Keep torso tall — do not lean forward','Front knee stays over ankle','Long stride for full ROM','Use dumbbells once bodyweight is easy'])">
+          <img class="ex-card-img" src="images/walking_lunges.png" alt="Walking Lunges" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1616279969965-c0b8e48c69a4?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Walking Lunges</div><div class="ex-muscles">Quads · Glutes · Hamstrings</div></div><div class="ex-sets-pill">3×20</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Leg Extension','Wednesday — Legs','3×15',['Quadriceps (isolation)'],['None significant'],['Squeeze and hold at top for 1 sec','Full extension but do not hyperextend','3 sec slow eccentric','Can do single-leg for imbalance'])">
+          <img class="ex-card-img" src="images/leg_extension.png" alt="Leg Extension" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Leg Extension</div><div class="ex-muscles">Quadriceps (isolation)</div></div><div class="ex-sets-pill">3×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Leg Curl','Wednesday — Legs','3×15',['Hamstrings (isolation)'],['Gastrocnemius'],['Hips flat on pad — do not let them rise','Full range: extend fully, curl all the way','Pause and squeeze at top','Prone version has better activation'])">
+          <img class="ex-card-img" src="images/leg_curl.png" alt="Leg Curl" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1598971639058-fab3c3109a53?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Leg Curl</div><div class="ex-muscles">Hamstrings (isolation)</div></div><div class="ex-sets-pill">3×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Standing Calf Raise','Wednesday — Legs','4×15–20',['Gastrocnemius'],['Soleus'],['Full stretch at the bottom is key','Rise fully onto ball of foot','Do NOT bounce — control full ROM','2 up · 2 hold · 3 down tempo'])">
+          <img class="ex-card-img" src="images/standing_calf_raise.png" alt="Calf Raise" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">6</div><div class="ex-info"><div class="ex-title">Standing Calf Raise</div><div class="ex-muscles">Gastrocnemius</div></div><div class="ex-sets-pill">4×15–20</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+      </div>
+
+      <!-- THURSDAY -->
+      <div class="workout-panel" id="day-3">
+        <div class="workout-day-header"><div class="workout-day-title">Thursday</div><div class="workout-focus-badge">Shoulders</div></div>
+        <div class="workout-meta">6:00 – 7:00 AM · 60 min · Tap exercise for tips</div>
+
+        <button class="ex-card" onclick="openEx('Seated Dumbbell Press','Thursday — Shoulders','4×10',['Anterior Deltoid','Medial Deltoid','Triceps'],['Upper Chest','Traps'],['Press straight up, not forward','Back flat — no excessive arch','Lower to ear-height for full ROM','Do not touch dumbbells at top'])">
+          <img class="ex-card-img" src="images/seated_dumbbell_press.png" alt="Seated Dumbbell Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80&auto=format&fit=crop&crop=right'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Seated Dumbbell Press</div><div class="ex-muscles">Anterior · Medial Deltoid · Triceps</div></div><div class="ex-sets-pill">4×10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Lateral Raise','Thursday — Shoulders','4×15',['Medial Deltoid (isolation)'],['Supraspinatus','Traps'],['Lead with elbows, not hands','Stop at shoulder height','Slight forward lean for better activation','Cables give constant tension'])">
+          <img class="ex-card-img" src="images/lateral_raise.png" alt="Lateral Raise" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Lateral Raise</div><div class="ex-muscles">Medial Deltoid (isolation)</div></div><div class="ex-sets-pill">4×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Front Raise','Thursday — Shoulders','3×12',['Anterior Deltoid'],['Upper Chest','Medial Deltoid'],['Raise to eye level — no higher','Slight elbow bend throughout','Plate, bar, or dumbbells alternate','Front delt usually overtrained — keep volume moderate'])">
+          <img class="ex-card-img" src="images/front_raise.png" alt="Front Raise" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=600&q=80&auto=format&fit=crop&crop=top'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Front Raise</div><div class="ex-muscles">Anterior Deltoid</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Rear Delt Fly','Thursday — Shoulders','4×15',['Posterior Deltoid','Rhomboids'],['Infraspinatus','Teres Minor'],['Hinge forward 45°+ for rear delt focus','Lead with elbows out to sides','No momentum — detail movement','Balances the shoulder girdle'])">
+          <img class="ex-card-img" src="images/rear_delt_fly.png" alt="Rear Delt Fly" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Rear Delt Fly</div><div class="ex-muscles">Posterior Deltoid · Rhomboids</div></div><div class="ex-sets-pill">4×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Upright Row','Thursday — Shoulders','3×12',['Medial Deltoid','Traps'],['Biceps','Anterior Deltoid'],['Pull to chin level','Keep bar close to body','Wide grip emphasizes delts over traps','Switch to face pulls if shoulder impingement'])">
+          <img class="ex-card-img" src="images/upright_row.png" alt="Upright Row" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Upright Row</div><div class="ex-muscles">Medial Deltoid · Traps</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Dumbbell Shrugs','Thursday — Shoulders','4×15',['Trapezius (upper)'],['Levator Scapulae'],['Lift straight up — no rolling','Hold top for 2 seconds','Full range — let dumbbells hang fully','Use straps if grip limits you'])">
+          <img class="ex-card-img" src="images/dumbbell_shrugs.png" alt="Dumbbell Shrugs" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80&auto=format&fit=crop&crop=top'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">6</div><div class="ex-info"><div class="ex-title">Dumbbell Shrugs</div><div class="ex-muscles">Upper Trapezius</div></div><div class="ex-sets-pill">4×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+      </div>
+
+      <!-- FRIDAY -->
+      <div class="workout-panel" id="day-4">
+        <div class="workout-day-header"><div class="workout-day-title">Friday</div><div class="workout-focus-badge">Upper + Abs</div></div>
+        <div class="workout-meta">6:00 – 7:00 AM · 60 min · Tap exercise for tips</div>
+
+        <button class="ex-card" onclick="openEx('Pull Ups','Friday — Upper Body + Abs','4×Max',['Latissimus Dorsi','Biceps','Rear Deltoid'],['Teres Major','Rhomboids'],['Full dead hang at bottom for max range','Pull chest to bar, not just chin','Use bands if needed to start','Add weight once you hit 12+ bodyweight'])">
+          <img class="ex-card-img" src="images/pull_ups.png" alt="Pull Ups" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1604480132736-44c188fe4d20?w=600&q=80&auto=format&fit=crop'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Pull Ups</div><div class="ex-muscles">Lats · Biceps · Rear Deltoid</div></div><div class="ex-sets-pill">4×Max</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Push Ups','Friday — Upper Body + Abs','4×Max',['Pectoralis Major','Anterior Deltoid','Triceps'],['Serratus Anterior','Core'],['Core braced — body is one straight line','Hands slightly wider than shoulder-width','Touch chest to floor for full range','Elevate feet to increase difficulty'])">
+          <img class="ex-card-img" src="images/push_ups.png" alt="Push Ups" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1598971639058-fab3c3109a53?w=600&q=80&auto=format&fit=crop&crop=top'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Push Ups</div><div class="ex-muscles">Chest · Triceps · Anterior Deltoid</div></div><div class="ex-sets-pill">4×Max</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Incline Dumbbell Press','Friday — Upper Body + Abs','3×12',['Upper Chest','Anterior Deltoid','Triceps'],['Serratus'],['Set bench 30–45°','Touch dumbbells near shoulder-width at bottom','Don\'t fully lock out at top','3 sec eccentric'])">
+          <img class="ex-card-img" src="images/incline_dumbbell_press.png" alt="Incline Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1534368786749-b63e05c92717?w=600&q=80&auto=format&fit=crop&crop=right'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Incline Dumbbell Press</div><div class="ex-muscles">Upper Chest · Triceps</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Cable Row','Friday — Upper Body + Abs','3×12',['Middle Traps','Rhomboids','Lats'],['Biceps','Rear Deltoid'],['Pull to lower chest / upper stomach','Sit tall, slight arch in lower back','Squeeze shoulder blades at peak','Full lat stretch at the front'])">
+          <img class="ex-card-img" src="images/cable_row.png" alt="Cable Row" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Cable Row</div><div class="ex-muscles">Mid Traps · Rhomboids · Lats</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Dumbbell Lateral Raise','Friday — Upper Body + Abs','3×15',['Medial Deltoid'],['Supraspinatus'],['Lead with elbows — slight forward lean','Stop at shoulder height','Micro-bend in elbows throughout','Drop set: fail, reduce weight, continue'])">
+          <img class="ex-card-img" src="images/lateral_raise.png" alt="Lateral Raise" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Dumbbell Lateral Raise</div><div class="ex-muscles">Medial Deltoid</div></div><div class="ex-sets-pill">3×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Plank','Friday — Upper Body + Abs','3×60 sec',['Rectus Abdominis','Transverse Abdominis','Obliques'],['Glutes','Shoulder Stabilizers'],['Elbows directly under shoulders','Squeeze glutes and core simultaneously','Neutral spine — no sagging or raised butt','Add weight plate when 60s feels easy'])">
+          <img class="ex-card-img" src="images/plank.png" alt="Plank" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1616803689943-5601631c7fec?w=600&q=80&auto=format&fit=crop&crop=top'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">6</div><div class="ex-info"><div class="ex-title">Plank</div><div class="ex-muscles">Rectus Abs · Transverse Abs · Obliques</div></div><div class="ex-sets-pill">3×60s</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Hanging Leg Raises','Friday — Upper Body + Abs','3×15',['Lower Rectus Abdominis','Hip Flexors'],['Obliques'],['Start from full dead hang','Avoid swinging — control the movement','Legs to 90° or higher for best ROM','Bend knees if straight-leg is too hard'])">
+          <img class="ex-card-img" src="images/hanging_leg_raises.png" alt="Hanging Leg Raises" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1604480132736-44c188fe4d20?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">7</div><div class="ex-info"><div class="ex-title">Hanging Leg Raises</div><div class="ex-muscles">Lower Abs · Hip Flexors</div></div><div class="ex-sets-pill">3×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+
+        <button class="ex-card" onclick="openEx('Cable Crunches','Friday — Upper Body + Abs','3×15',['Rectus Abdominis'],['Obliques'],['Kneel and pull cable down with forehead toward floor','Crunch through abs — not arms','Movement comes from core, not hip flexors','Hold peak contraction 1 sec every rep'])">
+          <img class="ex-card-img" src="images/cable_crunches.png" alt="Cable Crunches" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+          <div class="ex-card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="ex-card-body"><div class="ex-num-badge">8</div><div class="ex-info"><div class="ex-title">Cable Crunches</div><div class="ex-muscles">Rectus Abdominis</div></div><div class="ex-sets-pill">3×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        </button>
+    </div><!-- end day-4 Friday workout-panel -->
+
+      <!-- SATURDAY -->
+      <div class="workout-panel" id="day-5">
+        <!-- Default: Rest day -->
+        <div id="sat-rest-view">
+          <div class="recover-card">
+            <div class="recover-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.19M15 6h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3.19"/><line x1="23" y1="13" x2="23" y2="11"/><polyline points="11 6 7 12 13 12 9 18"/></svg></div>
+            <div class="recover-title">Saturday — Active Rest</div>
+            <div class="recover-sub">No office this week — all weekday gym sessions are done.<br>Use today to recover smart.</div>
+            <div class="recover-tips">
+              <div class="recover-tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.43 3 8c.03-2.42 1.3-4 2-4s2 1.58 2 4c.03 2.43-1 3.5-1 5.62V16"/><path d="M8 16v-2.38C8 11.5 6.97 10.43 7 8c.03-2.42 1.3-4 2-4s2 1.58 2 4c.03 2.43-1 3.5-1 5.62V16"/><path d="M11.5 16.56c.5-.34.5-1.18 0-2.12-.51-.94-1.35-1.37-2-1.44"/><path d="M4 22l4-2 4 2"/><path d="M16 16v-2.38c0-2.12 1.03-3.19 1-5.62-.03-2.42-1.3-4-2-4s-2 1.58-2 4c-.03 2.43 1 3.5 1 5.62V16"/><path d="M20 16v-2.38c0-2.12 1.03-3.19 1-5.62-.03-2.42-1.3-4-2-4s-2 1.58-2 4c-.03 2.43 1 3.5 1 5.62V16"/><path d="M14 22l4-2 4 2"/></svg><span class="recover-tip-text">Easy 20–30 min walk — keep the 8–10K steps habit going</span></div>
+              <div class="recover-tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="6" x="3" y="9" rx="3"/><line x1="3" y1="12" x2="21" y2="12"/></svg><span class="recover-tip-text">10 min full-body stretch or foam rolling for muscle recovery</span></div>
+              <div class="recover-tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></svg><span class="recover-tip-text">Hit 3–4L water — recovery is nutrition + hydration</span></div>
+              <div class="recover-tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12.5" cy="8.5" r="2.5"/><path d="M12.5 2a6.5 6.5 0 0 0-6.22 4.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3A6.5 6.5 0 0 0 12.5 2z"/><path d="M19.5 9.5c1.7 0 3.5 1.1 3.5 2.5s-.9 2.5-3.4 2.5h-3.7"/><path d="M2 14.5c1.7 0 3.5-1.1 3.5-2.5S4.5 9.5 2 9.5"/></svg><span class="recover-tip-text">Still hit your 140–150g protein target on rest days</span></div>
+              <div class="recover-tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span class="recover-tip-text">Protect 8 hrs sleep — this is when muscle is actually built</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Office makeup view: shows the skipped day's workout -->
+        <div id="sat-makeup-view" style="display:none;">
+          <div class="workout-day-header">
+            <div class="workout-day-title">Saturday</div>
+            <div class="workout-focus-badge" id="satMakeupFocusBadge">Makeup Day</div>
+          </div>
+          <div class="workout-meta" id="satMakeupMeta">Makeup session — office day skipped · Tap exercise for tips</div>
+
+          <!-- Makeup workout content injected by JS based on which day was office -->
+          <div id="satMakeupExercises"></div>
+        </div>
+      </div>
+
+      <!-- SUNDAY -->
+      <div class="workout-panel" id="day-6">
+        <div class="recover-card" style="background: linear-gradient(135deg, #1c1c1e 0%, #3a3a3c 100%);">
+          <div class="recover-icon" style="background: rgba(255,255,255,0.12)"><svg style="stroke:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+          <div class="recover-title" style="color:#fff;">Sunday — Full Rest</div>
+          <div class="recover-sub" style="color:rgba(255,255,255,0.5);">Complete rest day. Zero training. Your body needs this.<br>Week starts fresh tomorrow.</div>
+          <div class="recover-tips" style="background:rgba(255,255,255,0.08);margin-top:14px;">
+            <div class="recover-tip"><svg style="stroke:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg><span class="recover-tip-text" style="color:rgba(255,255,255,0.8);">Meal prep for the week — proteins and carbs batch cooked</span></div>
+            <div class="recover-tip"><svg style="stroke:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="recover-tip-text" style="color:rgba(255,255,255,0.8);">Grocery run — restock for 5 training days ahead</span></div>
+            <div class="recover-tip"><svg style="stroke:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg><span class="recover-tip-text" style="color:rgba(255,255,255,0.8);">Check next week's schedule — plan any potential office days</span></div>
+            <div class="recover-tip"><svg style="stroke:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.14z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.14z"/></svg><span class="recover-tip-text" style="color:rgba(255,255,255,0.8);">Mental reset — no guilt, no overthinking. You showed up this week.</span></div>
+          </div>
+        </div>
+    </div><!-- end day-6 Sunday workout-panel -->
+    </div><!-- end screen-workout -->
+
+    
+    <div class="screen" id="screen-meals">
+      <div class="macro-bar-card">
+        <div class="macro-title">Daily Targets</div>
+        <div class="macro-row">
+          <div class="macro-item"><span class="macro-val">2200</span><span class="macro-lbl">Calories</span></div>
+          <div class="macro-item"><span class="macro-val">~163g</span><span class="macro-lbl">Protein</span></div>
+          <div class="macro-item"><span class="macro-val">3–4L</span><span class="macro-lbl">Water</span></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-item"><span class="macro-val">5g</span><span class="macro-lbl">Creatine</span></div>
+          <div class="macro-item"><span class="macro-val">8–10K</span><span class="macro-lbl">Steps</span></div>
+          <div class="macro-item"><span class="macro-val">8 hrs</span><span class="macro-lbl">Sleep</span></div>
+        </div>
+      </div>
+
+      <div class="section-header">Meal Plan</div>
+
+      <div class="meal-card-item">
+        <div class="meal-card-header"><div><div class="meal-name">Post-Workout Meal</div><div class="meal-time-tag">7:15 AM</div></div><div class="meal-protein-tag">~50g protein</div></div>
+        <div class="meal-items-list">
+          <div class="meal-food-row"><span class="meal-food-name">Whey Protein</span><span class="meal-food-qty">1 Scoop</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Whole Eggs</span><span class="meal-food-qty">3</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Rice (cooked)</span><span class="meal-food-qty">150g</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Curd</span><span class="meal-food-qty">100g</span></div>
+        </div>
+      </div>
+
+      <div class="meal-card-item">
+        <div class="meal-card-header"><div><div class="meal-name">Breakfast (After Sleep)</div><div class="meal-time-tag">9:30 AM</div></div><div class="meal-protein-tag">~55g protein</div></div>
+        <div class="meal-items-list">
+          <div class="meal-food-row"><span class="meal-food-name">Whey Protein</span><span class="meal-food-qty">1 Scoop</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Whole Eggs</span><span class="meal-food-qty">4</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Rolled Oats</span><span class="meal-food-qty">60g</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Curd</span><span class="meal-food-qty">200g</span></div>
+        </div>
+      </div>
+
+      <div class="meal-card-item">
+        <div class="meal-card-header"><div><div class="meal-name">Mid-Shift Main Meal</div><div class="meal-time-tag">2:00 PM</div></div><div class="meal-protein-tag">~45g protein</div></div>
+        <div class="meal-items-list">
+          <div class="meal-food-row"><span class="meal-food-name">Chicken Breast</span><span class="meal-food-qty">150g</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Rice (cooked)</span><span class="meal-food-qty">200g</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Vegetables</span><span class="meal-food-qty">1 Large Bowl</span></div>
+        </div>
+      </div>
+
+      <div class="meal-card-item">
+        <div class="meal-card-header"><div><div class="meal-name">Late-Shift Snack</div><div class="meal-time-tag">5:30 PM</div></div><div class="meal-protein-tag">~8g protein</div></div>
+        <div class="meal-items-list">
+          <div class="meal-food-row"><span class="meal-food-name">Curd</span><span class="meal-food-qty">200g</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Banana</span><span class="meal-food-qty">1</span></div>
+        </div>
+      </div>
+
+      <div class="meal-card-item">
+        <div class="meal-card-header"><div><div class="meal-name">Post-Shift Snack (Optional)</div><div class="meal-time-tag">8:30 PM</div></div><div class="meal-protein-tag">~5–8g protein</div></div>
+        <div class="meal-items-list">
+          <div class="meal-food-row"><span class="meal-food-name">Nuts / Fruit</span><span class="meal-food-qty">1 handful</span></div>
+          <div class="meal-food-row"><span class="meal-food-name">Protein Bar (opt.)</span><span class="meal-food-qty">1</span></div>
+        </div>
+      </div>
+
+      <div class="section-header">Supplements</div>
+      <div class="card">
+        <div class="meal-food-row" style="padding:12px 16px;"><span class="meal-food-name" style="font-weight:600;">Whey Protein</span><span class="meal-food-qty">Post-gym · 7:15 AM</span></div>
+        <div class="meal-food-row" style="padding:12px 16px;border-bottom:none;"><span class="meal-food-name" style="font-weight:600;">Creatine Monohydrate</span><span class="meal-food-qty">5g daily · Meal 1</span></div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="screen" id="screen-progress">
+      <div class="progress-hero">
+        <div class="progress-week-label">Current</div>
+        <div class="progress-week-title" id="currentWeekTitle">Week 1</div>
+        <div class="progress-week-sub">12-Week Body Recomposition</div>
+        <div class="week-nav">
+          <button class="week-nav-btn" onclick="changeWeek(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="week-dots" id="weekDots"></div>
+          <button class="week-nav-btn" onclick="changeWeek(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="section-header">Body Composition — Baseline</div>
+      <div style="background:#fff3cd;border-radius:12px;margin:0 16px 10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style="font-size:12px;color:#856404;font-weight:600;">Enter your baseline readings manually below</span>
+      </div>
+      <div class="tracker-card" id="mohanBaselineCard">
+        <div class="tracker-row">
+          <div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div>
+          <div class="tracker-info"><div class="tracker-label">Body Weight</div><div class="tracker-sub">Current</div></div>
+          <div class="tracker-value-wrap"><input type="number" step="0.1" id="bc_weight" placeholder="—" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1c1c1e;border:none;text-align:right;width:60px;background:transparent;outline:none;" oninput="saveBaseline()"><span class="tracker-unit">kg</span></div>
+        </div>
+        <div class="tracker-row">
+          <div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="tracker-info"><div class="tracker-label">Body Fat %</div><div class="tracker-sub" id="bc_bf_sub">Enter from your device reading</div></div>
+          <div class="tracker-value-wrap"><input type="number" step="0.1" id="bc_bf" placeholder="—" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#ff3b30;border:none;text-align:right;width:60px;background:transparent;outline:none;" oninput="saveBaseline()"><span class="tracker-unit">%</span></div>
+        </div>
+        <div class="tracker-row">
+          <div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.14z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.14z"/></svg></div>
+          <div class="tracker-info"><div class="tracker-label">Muscle Mass</div><div class="tracker-sub">Skeletal muscle from device</div></div>
+          <div class="tracker-value-wrap"><input type="number" step="0.1" id="bc_muscle" placeholder="—" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1c1c1e;border:none;text-align:right;width:60px;background:transparent;outline:none;" oninput="saveBaseline()"><span class="tracker-unit">kg</span></div>
+        </div>
+        <div class="tracker-row">
+          <div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c6.23-.05 7.87-5.57 7.5-10-.36-4.34-3.95-9.96-7.5-10-3.55.04-7.14 5.66-7.5 10-.37 4.43 1.27 9.95 7.5 10z"/></svg></div>
+          <div class="tracker-info"><div class="tracker-label">Lean Body Mass</div><div class="tracker-sub">Protect this — feed it protein</div></div>
+          <div class="tracker-value-wrap"><input type="number" step="0.1" id="bc_lbm" placeholder="—" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1c1c1e;border:none;text-align:right;width:60px;background:transparent;outline:none;" oninput="saveBaseline()"><span class="tracker-unit">kg</span></div>
+        </div>
+        <div class="tracker-row">
+          <div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></svg></div>
+          <div class="tracker-info"><div class="tracker-label">Body Water</div><div class="tracker-sub">Target 3–4L daily</div></div>
+          <div class="tracker-value-wrap"><input type="number" step="0.1" id="bc_water" placeholder="—" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#ff9500;border:none;text-align:right;width:60px;background:transparent;outline:none;" oninput="saveBaseline()"><span class="tracker-unit">%</span></div>
+        </div>
+        <div class="tracker-row">
+          <div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="tracker-info"><div class="tracker-label">Biological Age</div><div class="tracker-sub">BMR from device</div></div>
+          <div class="tracker-value-wrap"><input type="number" step="1" id="bc_age" placeholder="—" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1c1c1e;border:none;text-align:right;width:60px;background:transparent;outline:none;" oninput="saveBaseline()"><span class="tracker-unit">yrs</span></div>
+        </div>
+        <div class="tracker-row" style="border-bottom:none;">
+          <div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="tracker-info"><div class="tracker-label">Visceral Fat Index</div><div class="tracker-sub">Ideal range: keep below 9</div></div>
+          <div class="tracker-value-wrap"><input type="number" step="1" id="bc_visceral" placeholder="—" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#34c759;border:none;text-align:right;width:60px;background:transparent;outline:none;" oninput="saveBaseline()"><span class="tracker-unit">index</span></div>
+        </div>
+      </div>
+
+      <div class="section-header">Goal Physique — Target</div>
+      <div class="card card-inner" style="margin-bottom:10px;">
+        <div style="background:#1c1c1e;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">12-Week Target</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="text-align:center;"><span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;display:block;letter-spacing:1px;">~67kg</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;">Target Weight</span></div>
+            <div style="text-align:center;"><span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;display:block;letter-spacing:1px;">~15%</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;">Body Fat Goal</span></div>
+            <div style="text-align:center;"><span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;display:block;letter-spacing:1px;">−8.5kg</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;">Fat to Lose</span></div>
+            <div style="text-align:center;"><span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;display:block;letter-spacing:1px;">55+kg</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;">Muscle to Keep</span></div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#8e8e93;line-height:1.6;padding:2px 0;">
+          <strong style="color:#1c1c1e;font-size:13px;">Your goal:</strong> Visible 6-pack + full chest + wide shoulders — the physique in your reference image. You already have the muscle (52.2 kg) and bone structure. The only thing between you and that look is 26.5% → 15% body fat. Recomp works — drop fat, keep every gram of muscle.
+        </div>
+      </div>
+
+      <div class="section-header">Weekly Measurements</div>
+      <div class="tracker-card">
+        <div class="tracker-row"><div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div><div class="tracker-info"><div class="tracker-label">Body Weight</div><div class="tracker-sub">Morning, fasted</div></div><div class="tracker-value-wrap"><span class="tracker-value">——</span><span class="tracker-unit">kg</span></div></div>
+        <div class="tracker-row"><div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg></div><div class="tracker-info"><div class="tracker-label">Waist</div><div class="tracker-sub">At navel</div></div><div class="tracker-value-wrap"><span class="tracker-value">——</span><span class="tracker-unit">cm</span></div></div>
+        <div class="tracker-row"><div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.409 13.017A5 5 0 0 1 8 15H7c-1.1 0-2-.9-2-2v-1c0-1.1.9-2 2-2h1a5 5 0 0 0 4.409-2.983"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6 9 9 0 0 1 .9-2.2"/><path d="M16.5 6.5a4 4 0 0 0-8.3 1"/><path d="m15 9-3-3 3-3"/></svg></div><div class="tracker-info"><div class="tracker-label">Arms</div><div class="tracker-sub">Flexed, mid bicep</div></div><div class="tracker-value-wrap"><span class="tracker-value">——</span><span class="tracker-unit">cm</span></div></div>
+        <div class="tracker-row"><div class="tracker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l1.5-3 2 4.5 1.5-3h5.27"/></svg></div><div class="tracker-info"><div class="tracker-label">Chest</div><div class="tracker-sub">At nipple line</div></div><div class="tracker-value-wrap"><span class="tracker-value">——</span><span class="tracker-unit">cm</span></div></div>
+      </div>
+
+      <div class="section-header">Mindset Rules</div>
+      <div class="mindset-card-item"><div class="mindset-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><div><div class="mindset-title">Trust The Process</div><div class="mindset-text">Body recomposition is slow. Judge by how clothes fit, not just weight. The mirror tells the real story.</div></div></div>
+      <div class="mindset-card-item"><div class="mindset-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div><div class="mindset-title">Progressive Overload</div><div class="mindset-text">Add 1–2 kg or 1–2 reps each week. If the weight feels easy, it is time to go heavier.</div></div></div>
+      <div class="mindset-card-item"><div class="mindset-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div><div class="mindset-title">Consistency Beats Perfection</div><div class="mindset-text">Missing one session is not failure. Missing a week is. Show up imperfectly rather than not at all.</div></div></div>
+      <div class="mindset-card-item"><div class="mindset-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></div><div><div class="mindset-title">Mohan's Golden Rule</div><div class="mindset-text">Shift starts at 11 AM — gym is 6 AM sharp. You have the whole morning. No excuses. That 60-minute window before the world wakes up is yours. Protect it.</div></div></div>
+      <div class="mindset-card-item" style="margin-bottom:4px;"><div class="mindset-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12.5" cy="8.5" r="2.5"/><path d="M12.5 2a6.5 6.5 0 0 0-6.22 4.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3A6.5 6.5 0 0 0 12.5 2z"/><path d="M19.5 9.5c1.7 0 3.5 1.1 3.5 2.5s-.9 2.5-3.4 2.5h-3.7"/><path d="M2 14.5c1.7 0 3.5-1.1 3.5-2.5S4.5 9.5 2 9.5"/></svg></div><div><div class="mindset-title">Protein Is Non-Negotiable</div><div class="mindset-text">Hit 163g every single day — 2g per kg bodyweight. Your muscle mass (52.2 kg) cannot grow without raw materials. Water is also low at 49.3% — 3–4L daily is mandatory.</div></div></div>
+    </div>
+
+    <!-- GROCERY -->
+    <div class="screen" id="screen-grocery">
+      <div class="section-header">Weekly Grocery List</div>
+
+      <div class="grocery-category">
+        <div class="grocery-cat-header"><div class="grocery-cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12.5" cy="8.5" r="2.5"/><path d="M12.5 2a6.5 6.5 0 0 0-6.22 4.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3A6.5 6.5 0 0 0 12.5 2z"/><path d="M19.5 9.5c1.7 0 3.5 1.1 3.5 2.5s-.9 2.5-3.4 2.5h-3.7"/><path d="M2 14.5c1.7 0 3.5-1.1 3.5-2.5S4.5 9.5 2 9.5"/></svg></div><div class="grocery-cat-name">Proteins</div></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Chicken Breast (1 kg)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Whole Eggs (2 dozen)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Curd / Greek Yogurt (2 kg)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Soya Chunks (500g)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Whey Protein (restock)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Paneer (optional, 200g)</span></div>
+      </div>
+
+      <div class="grocery-category" style="margin-top:10px;">
+        <div class="grocery-cat-header"><div class="grocery-cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22 16 8"/><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94z"/><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94z"/><path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94z"/><path d="M22 2 7 17"/><path d="M20.53 8.47 22 7l-1.47 1.47-1.47 1.47"/><path d="M16.53 12.47 18 11l-1.47 1.47-1.47 1.47"/></svg></div><div class="grocery-cat-name">Carbs &amp; Grains</div></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Rice (2 kg)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Rolled Oats (500g)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Bananas (12–14)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Seasonal Fruits (1 kg)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Sweet Potato (optional)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Whole Wheat Bread</span></div>
+      </div>
+
+      <div class="grocery-category" style="margin-top:10px;margin-bottom:4px;">
+        <div class="grocery-cat-header"><div class="grocery-cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/><path d="M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-3.19 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.51 2.51 0 0 1 .03 1.5"/><path d="m13 12 4-4"/><path d="M10.9 7.25A3.99 3.99 0 0 0 4 10c0 .73.2 1.41.54 2"/></svg></div><div class="grocery-cat-name">Veg, Fats &amp; Extras</div></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Broccoli / Spinach (500g)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Mixed Vegetables (1 kg)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Olive Oil / Coconut Oil</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Almonds (100g)</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Creatine Monohydrate</span></div>
+        <div class="grocery-item-row" onclick="toggleGrocery(this)"><div class="grocery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="grocery-item-name">Peanut Butter (200g)</span></div>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchScreen('home',this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item" onclick="switchScreen('workout',this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M6 9h12M6 15h12M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></span><span class="nav-label">Workout</span>
+    </button>
+    <button class="nav-item" onclick="switchScreen('meals',this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></span><span class="nav-label">Meals</span>
+    </button>
+    <button class="nav-item" onclick="switchScreen('progress',this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nav-label">Progress</span>
+    </button>
+    <button class="nav-item" onclick="switchScreen('grocery',this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span><span class="nav-label">Grocery</span>
+    </button>
+  </nav>
+</div>
+
+<!-- EXERCISE MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal-sheet" id="modalSheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-ex-name" id="mName">Exercise</div>
+      <div class="modal-day-tag" id="mDay">Day</div>
+      <div class="modal-sets-pill" id="mSets">4×10</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info-row">
+        <div class="modal-info-chip"><span class="mic-lbl">Sets × Reps</span><span class="mic-val" id="mSets2">4×10</span></div>
+        <div class="modal-info-chip"><span class="mic-lbl">Rest</span><span class="mic-val" id="mRest">90s</span></div>
+      </div>
+      <div class="modal-section-lbl">Primary Muscles</div>
+      <div class="muscle-chips" id="mPrimary"></div>
+      <div class="modal-section-lbl">Secondary</div>
+      <div class="muscle-chips" id="mSecondary"></div>
+      <div class="modal-section-lbl" style="margin-top:14px;">Form Tips</div>
+      <div class="tips-list" id="mTips"></div>
+      <div class="modal-section-lbl">Set Tracker</div>
+      <div class="set-tracker" id="mSets3"></div>
+      <button class="modal-close-btn" onclick="closeModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SPLASH SCREEN ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Splash bar takes 1s delay + 1.4s animation = 2.4s total
+  setTimeout(() => {
+    const splash = document.getElementById('splashScreen');
+    splash.classList.add('hide');
+    setTimeout(() => { splash.style.display = 'none'; }, 450);
+  }, 2600);
+});
+
+// ── LOGIN / USER SYSTEM ───────────────────────────────────────────────────────
+const USERS = {
+  mohan:  { name: 'MOHAN',  pin: '202526', avatar: 'images/mohan.png',  initial: 'M', sub: '75.5 kg · Body Recomp' },
+  martin: { name: 'MARTIN', pin: '251013', avatar: 'images/martin.png', initial: 'M', sub: 'Night Shift Athlete' }
+};
+
+let activeUser = null;
+let pinBuffer = '';
+
+function selectUser(userId) {
+  activeUser = userId;
+  const u = USERS[userId];
+  document.getElementById('loginUserSelect').style.display = 'none';
+  document.getElementById('loginPinView').style.display = 'block';
+  document.getElementById('pinName').textContent = u.name;
+  document.getElementById('pinAvatarInitial').textContent = u.initial;
+  // Try loading avatar image
+  const img = document.createElement('img');
+  img.src = u.avatar;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+  img.onload = () => {
+    const av = document.getElementById('pinAvatar');
+    av.innerHTML = '';
+    av.appendChild(img);
+  };
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function backToUserSelect() {
+  activeUser = null;
+  pinBuffer = '';
+  document.getElementById('loginUserSelect').style.display = 'block';
+  document.getElementById('loginPinView').style.display = 'none';
+  updatePinDots();
+}
+
+function pinPress(digit) {
+  if (pinBuffer.length >= 6) return;
+  pinBuffer += digit;
+  updatePinDots();
+  if (pinBuffer.length === 6) {
+    setTimeout(checkPin, 120);
+  }
+}
+
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 6; i++) {
+    const d = document.getElementById('d' + i);
+    d.classList.toggle('filled', i < pinBuffer.length);
+    d.classList.remove('error');
+  }
+}
+
+function checkPin() {
+  const u = USERS[activeUser];
+  if (pinBuffer === u.pin) {
+    // Correct — load user and dismiss login
+    loadUser(activeUser);
+    document.getElementById('loginScreen').style.opacity = '0';
+    document.getElementById('loginScreen').style.transition = 'opacity 0.3s';
+    setTimeout(() => document.getElementById('loginScreen').style.display = 'none', 300);
+  } else {
+    // Wrong — shake dots red
+    for (let i = 0; i < 6; i++) document.getElementById('d' + i).classList.add('error');
+    document.getElementById('pinError').textContent = 'WRONG PIN';
+    setTimeout(() => {
+      pinBuffer = '';
+      updatePinDots();
+      document.getElementById('pinError').textContent = '';
+    }, 800);
+  }
+}
+
+function loadUser(userId) {
+  const u = USERS[userId];
+  // Top bar avatar
+  const imgEl = document.getElementById('topBarAvatarImg');
+  imgEl.src = u.avatar;
+  imgEl.onload = () => {
+    imgEl.style.display = 'block';
+    document.getElementById('topBarAvatarInitial').style.display = 'none';
+  };
+  imgEl.onerror = () => {
+    imgEl.style.display = 'none';
+    document.getElementById('topBarAvatarInitial').style.display = 'block';
+  };
+  document.getElementById('topBarAvatarInitial').textContent = u.initial;
+  const shiftLabel = userId === 'mohan' ? '11 AM – 8 PM · Gym 6 AM' : '8 PM – 5 AM · Gym 6 AM';
+  document.getElementById('topBarSub').textContent = u.name + ' · ' + shiftLabel;
+}
+
+function logout() {
+  if (!confirm('Switch user?')) return;
+  activeUser = null;
+  pinBuffer = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginScreen').style.opacity = '1';
+  document.getElementById('loginUserSelect').style.display = 'block';
+  document.getElementById('loginPinView').style.display = 'none';
+  updatePinDots();
+}
+
+// ── APP LOGIC ─────────────────────────────────────────────────────────────────
+function switchScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function switchDay(idx) {
+  document.querySelectorAll('.day-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.querySelectorAll('.workout-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+}
+
+// ── OFFICE TOGGLE ────────────────────────────────────────────────────────────
+const makeupWorkouts = {
+  0: { focus: 'Chest + Triceps', meta: 'Makeup: Monday skipped · Chest + Triceps · 60 min', exercises: `
+    <button class="ex-card" onclick="openEx('Barbell Bench Press','Saturday Makeup — Chest + Triceps','4×8–10',['Chest','Anterior Deltoid','Triceps'],['Front Deltoid','Serratus'],['Keep shoulder blades pinched and retracted throughout','Lower bar to mid-chest, not the neck','Drive through your heels for full-body tension','Pause 1 sec at the bottom to eliminate momentum'])">
+      <img class="ex-card-img" src="images/barbell_bench_press.png" alt="Barbell Bench Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Barbell Bench Press</div><div class="ex-muscles">Chest · Triceps · Anterior Deltoid</div></div><div class="ex-sets-pill">4×8–10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Incline Dumbbell Press','Saturday Makeup — Chest + Triceps','4×10–12',['Upper Chest','Anterior Deltoid','Triceps'],['Biceps','Serratus'],['Set bench 30–45°, not higher','Neutral grip reduces shoulder strain','3 sec eccentric — slow the descent'])">
+      <img class="ex-card-img" src="images/incline_dumbbell_press.png" alt="Incline Dumbbell Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1534368786749-b63e05c92717?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Incline Dumbbell Press</div><div class="ex-muscles">Upper Chest · Triceps</div></div><div class="ex-sets-pill">4×10–12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Pec Deck Fly','Saturday Makeup — Chest + Triceps','3×12–15',['Pectoralis Major'],['Anterior Deltoid'],['Keep elbows slightly bent throughout','Squeeze hard at peak contraction','Full stretch at the start position'])">
+      <img class="ex-card-img" src="images/pec_deck_fly.png" alt="Pec Deck Fly" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Pec Deck Fly</div><div class="ex-muscles">Pectoralis Major</div></div><div class="ex-sets-pill">3×12–15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Tricep Pushdown','Saturday Makeup — Chest + Triceps','4×12',['Triceps Brachii (all 3 heads)'],['Anconeus'],['Keep elbows pinned to your sides','Fully extend the arm at the bottom'])">
+      <img class="ex-card-img" src="images/tricep_pushdown.png" alt="Tricep Pushdown" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Tricep Pushdown</div><div class="ex-muscles">Triceps Brachii (all 3 heads)</div></div><div class="ex-sets-pill">4×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Overhead Tricep Extension','Saturday Makeup — Chest + Triceps','3×12',['Triceps Long Head'],['Anconeus'],['Full overhead stretch hits long head maximally','Keep elbows close — no flaring'])">
+      <img class="ex-card-img" src="images/overhead_tricep_extension.png" alt="Overhead Tricep Extension" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Overhead Tricep Ext.</div><div class="ex-muscles">Triceps Long Head</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>` },
+  1: { focus: 'Back + Biceps', meta: 'Makeup: Tuesday skipped · Back + Biceps · 60 min', exercises: `
+    <button class="ex-card" onclick="openEx('Lat Pulldown','Saturday Makeup — Back + Biceps','4×10–12',['Latissimus Dorsi','Biceps','Teres Major'],['Rear Deltoid','Rhomboids'],['Pull to upper chest, not behind neck','Initiate with elbows, not hands'])">
+      <img class="ex-card-img" src="images/lat_pulldown.png" alt="Lat Pulldown" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Lat Pulldown</div><div class="ex-muscles">Lats · Biceps · Teres Major</div></div><div class="ex-sets-pill">4×10–12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Barbell Row','Saturday Makeup — Back + Biceps','4×8–10',['Latissimus Dorsi','Rhomboids','Erector Spinae'],['Biceps','Rear Deltoid','Hamstrings'],['Hinge at hips — keep back flat','Pull bar to belly button, not chest'])">
+      <img class="ex-card-img" src="images/barbell_row.png" alt="Barbell Row" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Barbell Row</div><div class="ex-muscles">Lats · Rhomboids · Erector Spinae</div></div><div class="ex-sets-pill">4×8–10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Seated Cable Row','Saturday Makeup — Back + Biceps','4×10–12',['Middle Trapezius','Rhomboids','Latissimus Dorsi'],['Biceps','Rear Deltoid'],['Sit tall — avoid rounding lower back','Drive elbows back, squeeze shoulder blades'])">
+      <img class="ex-card-img" src="images/seated_cable_row.png" alt="Seated Cable Row" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1567598508481-65985588e295?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Seated Cable Row</div><div class="ex-muscles">Mid Traps · Rhomboids · Lats</div></div><div class="ex-sets-pill">4×10–12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Barbell Curl','Saturday Makeup — Back + Biceps','4×10',['Biceps Brachii','Brachialis'],['Forearm Flexors'],['Elbows pinned — no swinging','Squeeze hard at top for 1 sec'])">
+      <img class="ex-card-img" src="images/barbell_curl.png" alt="Barbell Curl" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80&auto=format&fit=crop&crop=left'">
+      <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Barbell Curl</div><div class="ex-muscles">Biceps Brachii · Brachialis</div></div><div class="ex-sets-pill">4×10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Hammer Curl','Saturday Makeup — Back + Biceps','3×12',['Brachialis','Brachioradialis','Biceps'],['Forearm Extensors'],['Neutral grip (thumbs up) throughout','Key for arm thickness'])">
+      <img class="ex-card-img" src="images/hammer_curl.png" alt="Hammer Curl" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Hammer Curl</div><div class="ex-muscles">Brachialis · Brachioradialis</div></div><div class="ex-sets-pill">3×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>` },
+  2: { focus: 'Legs', meta: 'Makeup: Wednesday skipped · Legs · 60 min', exercises: `
+    <button class="ex-card" onclick="openEx('Barbell Squat','Saturday Makeup — Legs','4×8–10',['Quadriceps','Glutes','Hamstrings'],['Erector Spinae','Adductors','Calves'],['Bar on upper traps — not your neck','Knees track over toes'])">
+      <img class="ex-card-img" src="images/barbell_squat.png" alt="Barbell Squat" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1567598508481-65985588e295?w=600&q=80&auto=format&fit=crop&crop=top'">
+      <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Barbell Squat</div><div class="ex-muscles">Quads · Glutes · Hamstrings</div></div><div class="ex-sets-pill">4×8–10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Leg Press','Saturday Makeup — Legs','4×12',['Quadriceps','Glutes','Hamstrings'],['Calves','Adductors'],['Feet shoulder-width at mid-plate','Lower to 90° — no deeper'])">
+      <img class="ex-card-img" src="images/leg_press.png" alt="Leg Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Leg Press</div><div class="ex-muscles">Quads · Glutes · Hamstrings</div></div><div class="ex-sets-pill">4×12</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Walking Lunges','Saturday Makeup — Legs','3×20 steps',['Quadriceps','Glutes','Hamstrings'],['Calves','Core'],['Keep torso tall','Front knee stays over ankle'])">
+      <img class="ex-card-img" src="images/walking_lunges.png" alt="Walking Lunges" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1616279969965-c0b8e48c69a4?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Walking Lunges</div><div class="ex-muscles">Quads · Glutes · Hamstrings</div></div><div class="ex-sets-pill">3×20</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Leg Curl','Saturday Makeup — Legs','3×15',['Hamstrings (isolation)'],['Gastrocnemius'],['Hips flat on pad','Full range: extend fully, curl all the way'])">
+      <img class="ex-card-img" src="images/leg_curl.png" alt="Leg Curl" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1598971639058-fab3c3109a53?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+      <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Leg Curl</div><div class="ex-muscles">Hamstrings (isolation)</div></div><div class="ex-sets-pill">3×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Standing Calf Raise','Saturday Makeup — Legs','4×15–20',['Gastrocnemius'],['Soleus'],['Full stretch at the bottom is key','Rise fully onto ball of foot'])">
+      <img class="ex-card-img" src="images/standing_calf_raise.png" alt="Calf Raise" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">5</div><div class="ex-info"><div class="ex-title">Standing Calf Raise</div><div class="ex-muscles">Gastrocnemius</div></div><div class="ex-sets-pill">4×15–20</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>` },
+  3: { focus: 'Shoulders', meta: 'Makeup: Thursday skipped · Shoulders · 60 min', exercises: `
+    <button class="ex-card" onclick="openEx('Seated Dumbbell Press','Saturday Makeup — Shoulders','4×10',['Anterior Deltoid','Medial Deltoid','Triceps'],['Upper Chest','Traps'],['Press straight up, not forward','Back flat — no excessive arch'])">
+      <img class="ex-card-img" src="images/seated_dumbbell_press.png" alt="Seated Dumbbell Press" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80&auto=format&fit=crop&crop=right'">
+      <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Seated Dumbbell Press</div><div class="ex-muscles">Anterior · Medial Deltoid · Triceps</div></div><div class="ex-sets-pill">4×10</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Lateral Raise','Saturday Makeup — Shoulders','4×15',['Medial Deltoid (isolation)'],['Supraspinatus','Traps'],['Lead with elbows, not hands','Stop at shoulder height'])">
+      <img class="ex-card-img" src="images/lateral_raise.png" alt="Lateral Raise" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Lateral Raise</div><div class="ex-muscles">Medial Deltoid (isolation)</div></div><div class="ex-sets-pill">4×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Rear Delt Fly','Saturday Makeup — Shoulders','4×15',['Posterior Deltoid','Rhomboids'],['Infraspinatus','Teres Minor'],['Hinge forward 45°+ for rear delt focus','Lead with elbows out to sides'])">
+      <img class="ex-card-img" src="images/rear_delt_fly.png" alt="Rear Delt Fly" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Rear Delt Fly</div><div class="ex-muscles">Posterior Deltoid · Rhomboids</div></div><div class="ex-sets-pill">4×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Dumbbell Shrugs','Saturday Makeup — Shoulders','4×15',['Trapezius (upper)'],['Levator Scapulae'],['Lift straight up — no rolling','Hold top for 2 seconds'])">
+      <img class="ex-card-img" src="images/dumbbell_shrugs.png" alt="Dumbbell Shrugs" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80&auto=format&fit=crop&crop=top'">
+      <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Dumbbell Shrugs</div><div class="ex-muscles">Upper Trapezius</div></div><div class="ex-sets-pill">4×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>` },
+  4: { focus: 'Upper + Abs', meta: 'Makeup: Friday skipped · Upper + Abs · 60 min', exercises: `
+    <button class="ex-card" onclick="openEx('Pull Ups','Saturday Makeup — Upper + Abs','4×Max',['Latissimus Dorsi','Biceps','Rear Deltoid'],['Teres Major','Rhomboids'],['Full dead hang at bottom','Pull chest to bar, not just chin'])">
+      <img class="ex-card-img" src="images/pull_ups.png" alt="Pull Ups" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1604480132736-44c188fe4d20?w=600&q=80&auto=format&fit=crop'">
+      <div class="ex-card-body"><div class="ex-num-badge">1</div><div class="ex-info"><div class="ex-title">Pull Ups</div><div class="ex-muscles">Lats · Biceps · Rear Deltoid</div></div><div class="ex-sets-pill">4×Max</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Push Ups','Saturday Makeup — Upper + Abs','4×Max',['Pectoralis Major','Anterior Deltoid','Triceps'],['Serratus Anterior','Core'],['Core braced — body is one straight line','Touch chest to floor for full range'])">
+      <img class="ex-card-img" src="images/push_ups.png" alt="Push Ups" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1598971639058-fab3c3109a53?w=600&q=80&auto=format&fit=crop&crop=top'">
+      <div class="ex-card-body"><div class="ex-num-badge">2</div><div class="ex-info"><div class="ex-title">Push Ups</div><div class="ex-muscles">Chest · Triceps · Anterior Deltoid</div></div><div class="ex-sets-pill">4×Max</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Plank','Saturday Makeup — Upper + Abs','3×60 sec',['Rectus Abdominis','Transverse Abdominis','Obliques'],['Glutes','Shoulder Stabilizers'],['Elbows directly under shoulders','Squeeze glutes and core simultaneously'])">
+      <img class="ex-card-img" src="images/plank.png" alt="Plank" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1616803689943-5601631c7fec?w=600&q=80&auto=format&fit=crop&crop=top'">
+      <div class="ex-card-body"><div class="ex-num-badge">3</div><div class="ex-info"><div class="ex-title">Plank</div><div class="ex-muscles">Rectus Abs · Transverse Abs · Obliques</div></div><div class="ex-sets-pill">3×60s</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>
+    <button class="ex-card" onclick="openEx('Hanging Leg Raises','Saturday Makeup — Upper + Abs','3×15',['Lower Rectus Abdominis','Hip Flexors'],['Obliques'],['Start from full dead hang','Avoid swinging — control the movement'])">
+      <img class="ex-card-img" src="images/hanging_leg_raises.png" alt="Hanging Leg Raises" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1604480132736-44c188fe4d20?w=600&q=80&auto=format&fit=crop&crop=bottom'">
+      <div class="ex-card-body"><div class="ex-num-badge">4</div><div class="ex-info"><div class="ex-title">Hanging Leg Raises</div><div class="ex-muscles">Lower Abs · Hip Flexors</div></div><div class="ex-sets-pill">3×15</div><div class="ex-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    </button>` }
+};
+
+function handleOfficeToggle() {
+  const isOffice = document.getElementById('officeToggle').checked;
+  const banner = document.getElementById('satMakeupBanner');
+  const sub = document.getElementById('officeToggleSub');
+  const satFocus = document.getElementById('satFocus');
+  if (isOffice) {
+    banner.classList.remove('hidden');
+    sub.textContent = 'Office day — Saturday is your makeup gym day';
+    satFocus.textContent = 'Makeup';
+    const tabs = [...document.querySelectorAll('.day-tab')];
+    const activeIdx = tabs.findIndex(t => t.classList.contains('active'));
+    const dayToMakeup = (activeIdx >= 0 && activeIdx <= 4) ? activeIdx : 0;
+    loadSaturdayMakeup(dayToMakeup);
+  } else {
+    banner.classList.add('hidden');
+    sub.textContent = 'Working from home — gym after shift';
+    satFocus.textContent = 'Rest';
+    document.getElementById('sat-rest-view').style.display = '';
+    document.getElementById('sat-makeup-view').style.display = 'none';
+  }
+  }
+
+function loadSaturdayMakeup(dayIdx) {
+  const w = makeupWorkouts[dayIdx];
+  if (!w) return;
+  document.getElementById('sat-rest-view').style.display = 'none';
+  document.getElementById('sat-makeup-view').style.display = '';
+  document.getElementById('satMakeupFocusBadge').textContent = w.focus;
+  document.getElementById('satMakeupMeta').textContent = w.meta;
+  document.getElementById('satMakeupExercises').innerHTML = w.exercises;
+  }
+
+// ── EXERCISE MODAL ────────────────────────────────────────────────────────────
+function openEx(name, day, sets, primary, secondary, tips) {
+  document.getElementById('mName').textContent = name;
+  document.getElementById('mDay').textContent = day;
+  document.getElementById('mSets').textContent = sets;
+  document.getElementById('mSets2').textContent = sets;
+  const isHeavy = /8|Fail|Max/.test(sets);
+  document.getElementById('mRest').textContent = isHeavy ? '90–120s' : '60–90s';
+  document.getElementById('mPrimary').innerHTML = primary.map(m => `<span class="muscle-chip primary">${m}</span>`).join('');
+  document.getElementById('mSecondary').innerHTML = secondary.map(m => `<span class="muscle-chip">${m}</span>`).join('');
+  document.getElementById('mTips').innerHTML = tips.map(t => `<div class="tip-item">${t}</div>`).join('');
+  const setCount = parseInt(sets) || 3;
+  const repLabel = sets.split('×')[1] || '';
+  const st = document.getElementById('mSets3');
+  st.innerHTML = '';
+  for (let i = 1; i <= setCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'set-row';
+    row.innerHTML = `<div class="set-circle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div><span class="set-set-label">SET ${i}</span><span class="set-rep-label">${repLabel} reps</span>`;
+    row.addEventListener('click', () => row.classList.toggle('done'));
+    st.appendChild(row);
+  }
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function toggleGrocery(row) { row.classList.toggle('checked'); }
+
+// ── WEEK NAVIGATION ───────────────────────────────────────────────────────────
+let currentWeek = 1;
+const totalWeeks = 12;
+
+function buildDots() {
+  const d = document.getElementById('weekDots');
+  d.innerHTML = '';
+  for (let i = 1; i <= totalWeeks; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'week-dot' + (i === currentWeek ? ' active' : '');
+    d.appendChild(dot);
+  }
+}
+
+function changeWeek(dir) {
+  currentWeek = Math.max(1, Math.min(totalWeeks, currentWeek + dir));
+  document.getElementById('currentWeekTitle').textContent = `Week ${currentWeek}`;
+  document.getElementById('headerWeekBadge').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg> WEEK ${currentWeek}`;
+  buildDots();
+}
+
+buildDots();
+
+// ── MOHAN BASELINE MANUAL ENTRY ──────────────────────────────────────────────
+function saveBaseline() {
+  const fields = ['bc_weight','bc_bf','bc_muscle','bc_lbm','bc_water','bc_age','bc_visceral'];
+  const data = {};
+  fields.forEach(id => { data[id] = document.getElementById(id)?.value || ''; });
+  try { localStorage.setItem('mohan_baseline', JSON.stringify(data)); } catch(e) {}
+}
+
+function loadBaseline() {
+  try {
+    const raw = localStorage.getItem('mohan_baseline');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    Object.keys(data).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id]) el.value = data[id];
+    });
+  } catch(e) {}
+}
+
+loadBaseline();
+</script>
+</body>
+</html>
