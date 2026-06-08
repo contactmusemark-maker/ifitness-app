@@ -546,6 +546,20 @@ body { font-family: 'DM Sans', sans-serif; background: #f2f2f7; color: #1c1c1e; 
         </div>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
+      <button onclick="selectUser('samuvel')" style="
+        background:#fff;border:none;border-radius:18px;padding:18px 20px;
+        display:flex;align-items:center;gap:16px;cursor:pointer;
+        box-shadow:0 2px 12px rgba(0,0,0,0.08);transition:transform 0.15s;
+        text-align:left;width:100%;
+      " onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform=''">
+        <img src="images/samuvel.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:#2c5f8a;display:none;align-items:center;justify-content:center;flex-shrink:0;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;">S</div>
+        <div style="flex:1;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#1c1c1e;line-height:1;">SAMUVEL</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#8e8e93;margin-top:3px;">Fitness Member</div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
   </div>
 
@@ -1350,8 +1364,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // ── LOGIN / USER SYSTEM ───────────────────────────────────────────────────────
 const USERS = {
-  mohan:  { name: 'MOHAN',  pin: '202526', avatar: 'images/mohan.png',  initial: 'M', sub: '75.5 kg · Body Recomp' },
-  martin: { name: 'MARTIN', pin: '251013', avatar: 'images/martin.png', initial: 'M', sub: 'Night Shift Athlete' }
+  mohan:   { name: 'MOHAN',   pin: '202526', avatar: 'images/mohan.png',   initial: 'M', sub: '75.5 kg · Body Recomp' },
+  martin:  { name: 'MARTIN',  pin: '251013', avatar: 'images/martin.png',  initial: 'M', sub: 'Night Shift Athlete' },
+  samuvel: { name: 'SAMUVEL', pin: '202529', avatar: 'images/samuvel.png', initial: 'S', sub: 'Fitness Member' }
 };
 
 let activeUser = null;
@@ -1443,7 +1458,7 @@ function loadUser(userId) {
     document.getElementById('topBarAvatarInitial').style.display = 'block';
   };
   document.getElementById('topBarAvatarInitial').textContent = u.initial;
-  const shiftLabel = userId === 'mohan' ? '11 AM – 8 PM · Gym 6 AM' : '8 PM – 5 AM · Gym 6 AM';
+  const shiftLabel = userId === 'mohan' ? '11 AM – 8 PM · Gym 6 AM' : userId === 'martin' ? '8 PM – 5 AM · Gym 6 AM' : 'Fitness Member';
   document.getElementById('topBarSub').textContent = u.name + ' · ' + shiftLabel;
 }
 
